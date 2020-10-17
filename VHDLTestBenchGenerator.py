@@ -352,12 +352,12 @@ class VHDLModule:
 
         test_bench_str = self.tb_template
 
-        test_bench_str = re.sub("\\{\\{MODULE_NAME}}", self.name, test_bench_str)
-        test_bench_str = re.sub("\\{\\{TESTBENCH_NAME}}", self.name + "_tb", test_bench_str)
+        test_bench_str = re.sub("{{MODULE_NAME}}", self.name, test_bench_str)
+        test_bench_str = re.sub("{{TESTBENCH_NAME}}", self.name + "_tb", test_bench_str)
 
         now = datetime.now()
         datetime_str = now.strftime("%m/%d/%Y %H:%M:%S")
-        test_bench_str = re.sub("\\{\\{CURR_DATE}}", datetime_str, test_bench_str)
+        test_bench_str = re.sub("{{CURR_DATE}}", datetime_str, test_bench_str)
 
         numeric_comment = "--"  # TODO: generalize the comment start string
 
@@ -376,7 +376,7 @@ class VHDLModule:
         if tb_needs_numeric_lib:
             numeric_comment = ""
 
-        test_bench_str = re.sub("\\{\\{NUMERIC_COMMENT}}", numeric_comment, test_bench_str)
+        test_bench_str = re.sub("{{NUMERIC_COMMENT}}", numeric_comment, test_bench_str)
 
         generic_declarations = ""
         for g in self.generics:
@@ -461,12 +461,12 @@ class VHDLModule:
         if len(clock_periods) > 0:
             clock_periods = "\n\t--Clock Periods\n\t" + clock_periods
 
-        test_bench_str = re.sub("\\{\\{GENERIC_PARAM_DECL}}[\\n]([ ]{4}|\\t)", generic_declarations, test_bench_str)
-        test_bench_str = re.sub("\\{\\{INPUT_SIGNAL_DECL}}[\\n]([ ]{4}|\\t)", port_input_decl, test_bench_str)
-        test_bench_str = re.sub("\\{\\{IN_OUT_SIGNAL_DECL}}[\\n]([ ]{4}|\\t)", port_in_out_decl, test_bench_str)
-        test_bench_str = re.sub("\\{\\{OUTPUT_SIGNAL_DECL}}[\\n]([ ]{4}|\\t)", port_output_decl, test_bench_str)
+        test_bench_str = re.sub("{{GENERIC_PARAM_DECL}}[\\n]([ ]{4}|\\t)", generic_declarations, test_bench_str)
+        test_bench_str = re.sub("{{INPUT_SIGNAL_DECL}}[\\n]([ ]{4}|\\t)", port_input_decl, test_bench_str)
+        test_bench_str = re.sub("{{IN_OUT_SIGNAL_DECL}}[\\n]([ ]{4}|\\t)", port_in_out_decl, test_bench_str)
+        test_bench_str = re.sub("{{OUTPUT_SIGNAL_DECL}}[\\n]([ ]{4}|\\t)", port_output_decl, test_bench_str)
 
-        test_bench_str = re.sub("[\\n]([ ]{4}|\\t)\\{\\{CLOCK_PERIOD_DECL}}", clock_periods, test_bench_str)
+        test_bench_str = re.sub("[\\n]([ ]{4}|\\t){{CLOCK_PERIOD_DECL}}", clock_periods, test_bench_str)
 
         # build generic map
         if len(self.generics) > 0:
@@ -478,9 +478,9 @@ class VHDLModule:
                     generic_map += ","
 
             generic_map += "\n\t)\n\t"
-            test_bench_str = re.sub("\\{\\{GENERIC_MAP}}", generic_map, test_bench_str)
+            test_bench_str = re.sub("{{GENERIC_MAP}}", generic_map, test_bench_str)
         else:
-            test_bench_str = re.sub("\\{\\{GENERIC_MAP}}", "", test_bench_str)
+            test_bench_str = re.sub("{{GENERIC_MAP}}", "", test_bench_str)
 
         # Build port map
         port_map = "port map("
@@ -503,7 +503,7 @@ class VHDLModule:
                 port_map += ","
 
         port_map += "\n\t);"
-        test_bench_str = re.sub("\\{\\{PORT_MAP}}", port_map, test_bench_str)
+        test_bench_str = re.sub("{{PORT_MAP}}", port_map, test_bench_str)
 
         # clock driving statements
         clock_drivers = ""
@@ -513,7 +513,7 @@ class VHDLModule:
         if len(clock_drivers) > 0:
             clock_drivers = "--Clock Drivers\n\t" + clock_drivers
 
-        test_bench_str = re.sub("\\{\\{CLOCK_DRIVERS}}", clock_drivers, test_bench_str)
+        test_bench_str = re.sub("{{CLOCK_DRIVERS}}", clock_drivers, test_bench_str)
 
         deassert_resets = ""
         for r in self.resets:
@@ -524,17 +524,17 @@ class VHDLModule:
                 ";\n\t"
 
         deassert_resets += "\n\t\t"
-        test_bench_str = re.sub("\\{\\{RESETS_INACTIVE}}[\n][ ]{8}", deassert_resets, test_bench_str)
+        test_bench_str = re.sub("{{RESETS_INACTIVE}}[\n][ ]{8}", deassert_resets, test_bench_str)
 
         if len(self.resets) == 0:
-            test_bench_str = re.sub("[\n][ ]{8}\\{\\{STD_WAIT}}[\n][ ]{8}", "", test_bench_str, 1)  # replace only the first occurrence
+            test_bench_str = re.sub("[\n][ ]{8}{{STD_WAIT}}[\n][ ]{8}", "", test_bench_str, 1)  # replace only the first occurrence
 
         # First clock is used for master clock period waits by default
         if len(self.clocks) > 0:
             clock_per_wait = "wait for " + self.clocks[0].period_name() + ";\n\t\t"
-            test_bench_str = re.sub("\\{\\{STD_WAIT}}", clock_per_wait, test_bench_str)
+            test_bench_str = re.sub("{{STD_WAIT}}", clock_per_wait, test_bench_str)
         else:
-            test_bench_str = re.sub("\\{\\{STD_WAIT}}\n[ ]{8}", "", test_bench_str)
+            test_bench_str = re.sub("{{STD_WAIT}}\n[ ]{8}", "", test_bench_str)
 
         # replace all tabs with 4 spaces each
         test_bench_str = re.sub("[\t]", "    ", test_bench_str)

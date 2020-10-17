@@ -165,13 +165,7 @@ class VHDLModule:
         port_found = False
 
         generic_names = []
-        generic_type = ""
-        generic_default_val = ""
-
         port_names = []
-        port_direction = ""
-        port_type = ""
-        interface_range = ""
 
         i = 0
         while i < len(words):
@@ -278,7 +272,6 @@ class VHDLModule:
         # find clocks
         # Strategy 1: look for "rising_edge" and "falling_edge"
         for i in range(0, len(words)):
-            pol = PolarityType.INVALID
 
             if words[i].lower() == "rising_edge":
                 pol = PolarityType.POSITIVE
@@ -288,7 +281,8 @@ class VHDLModule:
                 continue
 
             name = words[i + 2]
-            if self.clk_port_invalid(name): continue
+            if self.clk_port_invalid(name):
+                continue
 
             clock_port = False
             for p in self.ports:
@@ -304,12 +298,12 @@ class VHDLModule:
             if "'event" in words[i].lower():
                 name = re.split("[']", words[i])[0]
 
-                if self.clk_port_invalid(name): continue
+                if self.clk_port_invalid(name):
+                    continue
 
                 # Will only handle finding these two cases:
                 # <clk>'event and <clk> = '<val>'
                 # <clk> = '<val>' and <clk>'event
-                edge_val = ""
                 if words[i + 1].lower() == "and" and words[i + 2].lower() == name.lower():
                     edge_val = words[i + 4]
                 elif words[i - 1].lower() == "and" and words[i - 4].lower() == name.lower():
@@ -334,10 +328,13 @@ class VHDLModule:
         toRemove = []
         for p in self.ports:
             if "rst" in p.name.lower() or "reset" in p.name.lower():
-                if p.dir != PortDir.IN: continue
-                if p.is_bus(): continue
 
-                pol = PolarityType.INVALID
+                if p.dir != PortDir.IN:
+                    continue
+
+                if p.is_bus():
+                    continue
+
                 if p.name.lower()[-1] == 'n':
                     pol = PolarityType.NEGATIVE
                 else:
@@ -366,13 +363,13 @@ class VHDLModule:
 
         tb_needs_numeric_lib = False
         for p in self.ports:
-            if self.needs_numeric_lib(p.interface_type):
+            if VHDLModule.needs_numeric_lib(p.interface_type):
                 tb_needs_numeric_lib = True
                 break
 
         if not tb_needs_numeric_lib:
             for g in self.generics:
-                if self.needs_numeric_lib(g.interface_type):
+                if VHDLModule.needs_numeric_lib(g.interface_type):
                     tb_needs_numeric_lib = True
                     break
 
@@ -391,13 +388,12 @@ class VHDLModule:
         port_input_decl = ""
         port_in_out_decl = ""
         port_output_decl = ""
-        default_val = ""
 
         if len(self.clocks) > 0:
             port_input_decl += "--Clocks\n\t"
 
         for c in self.clocks:
-            default_val = self.get_default_val_for(c.port.interface_type, c.polarity)
+            default_val = VHDLModule.get_default_val_for(c.port.interface_type, c.polarity)
 
             # TODO: change toString methods to python's str() method override
             port_input_decl += "signal " + c.port.toString() + " := " + default_val + ";\n\t"
@@ -410,7 +406,7 @@ class VHDLModule:
             port_input_decl += "--Resets\n\t"
 
         for r in self.resets:
-            default_val = self.get_default_val_for(r.port.interface_type, PolarityType.reverse_polarity(r.polarity))
+            default_val = VHDLModule.get_default_val_for(r.port.interface_type, PolarityType.reverse_polarity(r.polarity))
             port_input_decl += "signal " + r.port.toString() + " := " + default_val + ";\n\t"
 
         if len(self.resets) > 0:
@@ -425,12 +421,12 @@ class VHDLModule:
                     found_input = True
                     port_input_decl += "--General inputs\n\t"
 
-                default_val = self.get_default_val_for(p.interface_type, PolarityType.POSITIVE)
+                default_val = VHDLModule.get_default_val_for(p.interface_type, PolarityType.POSITIVE)
                 port_input_decl += "signal " + p.toString() + " := " + default_val + ";\n\t"
 
             elif p.dir == PortDir.INOUT:
 
-                default_val = self.get_default_val_for(p.interface_type, PolarityType.POSITIVE)
+                default_val = VHDLModule.get_default_val_for(p.interface_type, PolarityType.POSITIVE)
                 port_in_out_decl += "signal " + p.toString() + " := " + default_val + ";\n\t"
 
             elif p.dir == PortDir.OUT:
@@ -524,7 +520,7 @@ class VHDLModule:
             deassert_resets += \
                 r.port.name + \
                 " <= " + \
-                self.get_default_val_for(r.port.interface_type, r.polarity) + \
+                VHDLModule.get_default_val_for(r.port.interface_type, r.polarity) + \
                 ";\n\t"
 
         deassert_resets += "\n\t\t"
@@ -608,16 +604,19 @@ class VHDLModule:
                 port_index = i
                 break
 
-        if not name_match: return True
+        if not name_match:
+            return True
 
         port = self.ports[port_index]
 
-        if port.is_bus(): return True
+        if port.is_bus():
+            return True
 
         return port.dir != PortDir.IN
 
-    def needs_numeric_lib(self, type):
-        type_lowcase = type.lower()
+    @staticmethod
+    def needs_numeric_lib(type_in):
+        type_lowcase = type_in.lower()
 
         numeric_types = ["signed", "unsigned", "natural"]
 
@@ -627,7 +626,8 @@ class VHDLModule:
 
         return False
 
-    def get_default_val_for(self, type, polarity):
+    @staticmethod
+    def get_default_val_for(type_in, polarity):
 
         default_vals = [
 
@@ -648,7 +648,7 @@ class VHDLModule:
         ]
 
         for pair in default_vals:
-            if pair[0].lower() == type.lower():
+            if pair[0].lower() == type_in.lower():
                 return pair[2] if polarity == PolarityType.NEGATIVE else pair[1]
 
         return "<DEFAULT VALUE NOT FOUND>"
@@ -699,7 +699,7 @@ class Port(VHDLInterface):
 
     def __init__(self, name, dir_str, port_type, port_range):
         super().__init__(name, port_type, port_range)
-        self.dir = self.decode_port_dir(dir_str)
+        self.dir = Port.decode_port_dir(dir_str)
 
     @classmethod
     def default(cls):
@@ -712,11 +712,20 @@ class Port(VHDLInterface):
     def port_decl_string(self):
         return self.toString().replace(" : ", " : " + self.port_dir_toString() + " ")
 
-    def decode_port_dir(self, port_dir_str):
+    @staticmethod
+    def decode_port_dir(port_dir_str):
+
         port_dir_str = port_dir_str.lower()
-        if port_dir_str == "in": return PortDir.IN
-        if port_dir_str == "out": return PortDir.OUT
-        if port_dir_str == "inout": return PortDir.INOUT
+
+        if port_dir_str == "in":
+            return PortDir.IN
+
+        if port_dir_str == "out":
+            return PortDir.OUT
+
+        if port_dir_str == "inout":
+            return PortDir.INOUT
+
         return PortDir.INVALID
 
     def port_dir_toString(self):
@@ -747,7 +756,8 @@ class VHDLControlInput:
         self.port = port
         self.polarity = pol
 
-    def reverse_polarity(self, orig):
+    @staticmethod
+    def reverse_polarity(orig):
         if orig == PolarityType.INVALID: return orig
         return PolarityType.NEGATIVE if orig == PolarityType.POSITIVE else PolarityType.POSITIVE
 

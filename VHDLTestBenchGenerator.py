@@ -425,7 +425,7 @@ class VHDLModule:
 
             elif p.dir == PortDir.OUT:
 
-                port_in_out_decl += "signal " + p.toString() + ";\n\t"
+                port_output_decl += "signal " + p.toString() + ";\n\t"
 
             else:
                 # TODO: add error prefix to errors
@@ -443,12 +443,13 @@ class VHDLModule:
         if len(port_input_decl) > 0:
             port_input_decl += "\n\t"
 
+        # print("Inouts: " + port_in_out_decl)
         if len(port_in_out_decl) > 0:
             port_in_out_decl = "--In-Outs\n\t" + generic_declarations
             port_in_out_decl += "\n\t"
 
         if len(port_output_decl) > 0:
-            port_output_decl = "--Outputs\n\t" + generic_declarations
+            port_output_decl = "--Outputs\n\t" + port_output_decl
             port_output_decl += "\n\t"
 
         if len(clock_periods) > 0:
@@ -480,7 +481,7 @@ class VHDLModule:
         for i in range(0, len(self.clocks)):
             p = self.clocks[i].port
             port_map += "\n\t\t" + p.name + " => " + p.name
-            if len(self.resets) > 0 or i < len(self.clocks) - 1:
+            if len(self.resets) > 0 or len(self.ports) > 0 or i < len(self.clocks) - 1:
                 port_map += ","
 
         for i in range(0, len(self.resets)):

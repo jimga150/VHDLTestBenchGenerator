@@ -2,7 +2,7 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 10/17/2020 10:11:14 AM
+-- Create Date: 10/17/2020 19:12:21
 -- Design Name: Filter_SM_tb
 -- Module Name: Filter_SM_tb - Behavioral
 -- Project Name: 
@@ -106,7 +106,7 @@ begin
         wait for clk_period;
         
         rst <= '0';
-        
+    
         wait for clk_period;
         
         --Insert stimuli here

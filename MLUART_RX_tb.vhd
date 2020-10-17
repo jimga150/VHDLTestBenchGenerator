@@ -2,7 +2,7 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 05/03/2020 01:57:05 PM
+-- Create Date: 10/17/2020 19:12:24
 -- Design Name: MLUART_RX_tb
 -- Module Name: MLUART_RX_tb - Behavioral
 -- Project Name: 
@@ -54,7 +54,7 @@ begin
     
     UUT: entity work.MLUART_RX
     port map(
-        CLK_100MHZ => CLK_100MHZ
+        CLK_100MHZ => CLK_100MHZ,
         clk_en_16_x_baud => clk_en_16_x_baud,
         read_data_complete => read_data_complete,
         data_out => data_out,

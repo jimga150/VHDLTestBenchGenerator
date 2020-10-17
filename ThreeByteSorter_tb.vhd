@@ -2,7 +2,7 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 05/03/2020 01:42:58 PM
+-- Create Date: 10/17/2020 19:12:17
 -- Design Name: ThreeByteSorter_tb
 -- Module Name: ThreeByteSorter_tb - Behavioral
 -- Project Name: 

@@ -3,6 +3,7 @@ import re
 import sys
 from enum import Enum, auto, unique
 from pathlib import Path
+from datetime import datetime
 
 
 def parse_vhdl(args):
@@ -48,6 +49,10 @@ def parse_vhdl(args):
 
     module.print_info()
 
+    test_bench_str = module.build_test_bench_str()
+
+    print(test_bench_str)
+
 
 class VHDLModule:
     tb_template = "----------------------------------------------------------------------------------\n" \
@@ -90,7 +95,7 @@ class VHDLModule:
                   "    \n" \
                   "    {{GENERIC_PARAM_DECL}}\n" \
                   "    {{INPUT_SIGNAL_DECL}}\n" \
-                  "    {{INOUT_SIGNAL_DECL}}\n" \
+                  "    {{IN_OUT_SIGNAL_DECL}}\n" \
                   "    {{OUTPUT_SIGNAL_DECL}}\n" \
                   "    {{CLOCK_PERIOD_DECL}}\n" \
                   "begin\n" \
@@ -336,6 +341,199 @@ class VHDLModule:
 
         self.valid = True
 
+    def build_test_bench_str(self):
+
+        test_bench_str = self.tb_template
+
+        test_bench_str = re.sub("\\{\\{MODULE_NAME}}", self.name, test_bench_str)
+        test_bench_str = re.sub("\\{\\{TESTBENCH_NAME}}", self.name + "_tb", test_bench_str)
+
+        now = datetime.now()
+        datetime_str = now.strftime("%m/%d/%Y %H:%M:%S")
+        test_bench_str = re.sub("\\{\\{CURR_DATE}}", datetime_str, test_bench_str)
+
+        numeric_comment = "--"  # TODO: generalize the comment start string
+
+        tb_needs_numeric_lib = False
+        for p in self.ports:
+            if self.needs_numeric_lib(p.interface_type):
+                tb_needs_numeric_lib = True
+                break
+
+        if not tb_needs_numeric_lib:
+            for g in self.generics:
+                if self.needs_numeric_lib(g.interface_type):
+                    tb_needs_numeric_lib = True
+                    break
+
+        if tb_needs_numeric_lib:
+            numeric_comment = ""
+
+        test_bench_str = re.sub("\\{\\{NUMERIC_COMMENT}}", numeric_comment, test_bench_str)
+
+        generic_declarations = ""
+        for g in self.generics:
+            generic_declarations += "constant " + g.toString() + ";\n\t"
+
+        if len(self.generics) > 0:
+            generic_declarations += "\n\t"
+
+        port_input_decl = ""
+        port_in_out_decl = ""
+        port_output_decl = ""
+        default_val = ""
+
+        if len(self.clocks) > 0:
+            port_input_decl += "--Clocks\n\t"
+
+        for c in self.clocks:
+            default_val = self.get_default_val_for(c.port.interface_type, c.polarity)
+
+            # TODO: change toString methods to python's str() method override
+            port_input_decl += "signal " + c.port.toString() + " := " + default_val + ";\n\t"
+
+        if len(self.clocks) > 0:
+            port_input_decl += "\n\t"
+
+        # add resets
+        if len(self.resets) > 0:
+            port_input_decl += "--Resets\n\t"
+
+        for r in self.resets:
+            default_val = self.get_default_val_for(r.port.interface_type, PolarityType.reverse_polarity(r.polarity))
+            port_input_decl += "signal " + r.port.toString() + " := " + default_val + ";\n\t"
+
+        if len(self.resets) > 0:
+            port_input_decl += "\n\t"
+
+        found_input = False
+
+        for p in self.ports:
+            if p.dir == PortDir.IN:
+
+                if not found_input:
+                    found_input = True
+                    port_input_decl += "--General inputs\n\t"
+
+                default_val = self.get_default_val_for(p.interface_type, PolarityType.POSITIVE)
+                port_input_decl += "signal " + p.toString() + " := " + default_val + ";\n\t"
+
+            elif p.dir == PortDir.INOUT:
+
+                default_val = self.get_default_val_for(p.interface_type, PolarityType.POSITIVE)
+                port_in_out_decl += "signal " + p.toString() + " := " + default_val + ";\n\t"
+
+            elif p.dir == PortDir.OUT:
+
+                port_in_out_decl += "signal " + p.toString() + ";\n\t"
+
+            else:
+                # TODO: add error prefix to errors
+                print("ERROR: Port direction undefined: " + p.dir)
+                return ""
+
+        clock_periods = ""
+        for c in self.clocks:
+            clock_periods += "constant " + c.period_name() + " : time := 10 ns;\n\t"
+
+        if len(generic_declarations) > 0:
+            generic_declarations = "--Generics\n\t" + generic_declarations
+            generic_declarations += "\n\t"
+
+        if len(port_input_decl) > 0:
+            port_input_decl += "\n\t"
+
+        if len(port_in_out_decl) > 0:
+            port_in_out_decl = "--In-Outs\n\t" + generic_declarations
+            port_in_out_decl += "\n\t"
+
+        if len(port_output_decl) > 0:
+            port_output_decl = "--Outputs\n\t" + generic_declarations
+            port_output_decl += "\n\t"
+
+        if len(clock_periods) > 0:
+            clock_periods = "\n\t--Clock Periods\n\t" + clock_periods
+
+        test_bench_str = re.sub("\\{\\{GENERIC_PARAM_DECL}}[\\n]([ ]{4}|\\t)", generic_declarations, test_bench_str)
+        test_bench_str = re.sub("\\{\\{INPUT_SIGNAL_DECL}}[\\n]([ ]{4}|\\t)", port_input_decl, test_bench_str)
+        test_bench_str = re.sub("\\{\\{IN_OUT_SIGNAL_DECL}}[\\n]([ ]{4}|\\t)", port_in_out_decl, test_bench_str)
+        test_bench_str = re.sub("\\{\\{OUTPUT_SIGNAL_DECL}}[\\n]([ ]{4}|\\t)", port_output_decl, test_bench_str)
+
+        test_bench_str = re.sub("[\\n]([ ]{4}|\\t)\\{\\{CLOCK_PERIOD_DECL}}", clock_periods, test_bench_str)
+
+        # build generic map
+        if len(self.generics) > 0:
+            generic_map = "generic map("
+            for i in range(0, len(self.generics)):
+                g = self.generics[i]
+                generic_map += "\n\t\t" + g.name + " => " + g.name
+                if i < len(self.generics)-1:
+                    generic_map += ","
+
+            generic_map += "\n\t)\n\t"
+            test_bench_str = re.sub("\\{\\{GENERIC_MAP}}", generic_map, test_bench_str)
+        else:
+            test_bench_str = re.sub("\\{\\{GENERIC_MAP}}", "", test_bench_str)
+
+        # Build port map
+        port_map = "port map("
+        for i in range(0, len(self.clocks)):
+            p = self.clocks[i].port
+            port_map += "\n\t\t" + p.name + " => " + p.name
+            if len(self.resets) > 0 or i < len(self.clocks) - 1:
+                port_map += ","
+
+        for i in range(0, len(self.resets)):
+            p = self.resets[i].port
+            port_map += "\n\t\t" + p.name + " => " + p.name
+            if len(self.ports) > 0 or i < len(self.resets) - 1:
+                port_map += ","
+
+        for i in range(0, len(self.ports)):
+            p = self.ports[i]
+            port_map += "\n\t\t" + p.name + " => " + p.name
+            if i < len(self.ports) - 1:
+                port_map += ","
+
+        port_map += "\n\t);"
+        test_bench_str = re.sub("\\{\\{PORT_MAP}}", port_map, test_bench_str)
+
+        # clock driving statements
+        clock_drivers = ""
+        for c in self.clocks:
+            clock_drivers += c.port.name + " <= not " + c.port.name + " after " + c.period_name() + "/2;\n\t"
+
+        if len(clock_drivers) > 0:
+            clock_drivers = "--Clock Drivers\n\t" + clock_drivers
+
+        test_bench_str = re.sub("\\{\\{CLOCK_DRIVERS}}", clock_drivers, test_bench_str)
+
+        deassert_resets = ""
+        for r in self.resets:
+            deassert_resets += \
+                r.port.name + \
+                " <= " + \
+                self.get_default_val_for(r.port.interface_type, r.polarity) + \
+                ";\n\t"
+
+        deassert_resets += "\n\t\t"
+        test_bench_str = re.sub("\\{\\{RESETS_INACTIVE}}[\n][ ]{8}", deassert_resets, test_bench_str)
+
+        if len(self.resets) == 0:
+            test_bench_str = re.sub("[\n][ ]{8}\\{\\{STD_WAIT}}[\n][ ]{8}", "", test_bench_str, 1)  # replace only the first occurrence
+
+        # First clock is used for master clock period waits by default
+        if len(self.clocks) > 0:
+            clock_per_wait = "wait for " + self.clocks[0].period_name() + ";\n\t\t"
+            test_bench_str = re.sub("\\{\\{STD_WAIT}}", clock_per_wait, test_bench_str)
+        else:
+            test_bench_str = re.sub("\\{\\{STD_WAIT}}\n[ ]{8}", "", test_bench_str)
+
+        # replace all tabs with 4 spaces each
+        test_bench_str = re.sub("[\t]", "    ", test_bench_str)
+
+        return test_bench_str
+
     def print_info(self):
         print("\nGenerics:")
 
@@ -407,6 +605,42 @@ class VHDLModule:
 
         return port.dir != PortDir.IN
 
+    def needs_numeric_lib(self, type):
+        type_lowcase = type.lower()
+
+        numeric_types = ["signed", "unsigned", "natural"]
+
+        for ntype in numeric_types:
+            if ntype in type_lowcase:
+                return True
+
+        return False
+
+    def get_default_val_for(self, type, polarity):
+
+        default_vals = [
+
+            ["std_logic", "'0'", "'1'"],
+            ["std_logic_vector", "(others => '0')", "(others => '1')"],
+
+            ["std_ulogic", "'0'", "'1'"],
+            ["std_ulogic_vector", "(others => '0')", "(others => '1')"],
+
+            ["bit", "'0'", "'1'"],
+            ["bit_vector", "(others => '0')", "(others => '1')"],
+
+            ["unsigned", "(others => '0')", "(others => '1')"],
+            ["signed", "(others => '0')", "(others => '1')"],
+
+            ["integer", "0", "1"],
+            ["natural", "0", "1"]
+        ]
+
+        for pair in default_vals:
+            if pair[0].lower() == type.lower():
+                return pair[2] if polarity == PolarityType.NEGATIVE else pair[1]
+
+        return "<DEFAULT VALUE NOT FOUND>"
 
 @unique
 class PortDir(Enum):
@@ -421,6 +655,13 @@ class PolarityType(Enum):
     POSITIVE = auto()
     NEGATIVE = auto()
     INVALID = auto()
+
+    @staticmethod
+    def reverse_polarity(pol):
+        if pol == PolarityType.INVALID:
+            return pol
+
+        return PolarityType.POSITIVE if pol == PolarityType.NEGATIVE else PolarityType.NEGATIVE
 
 
 class VHDLInterface:

@@ -2,7 +2,7 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 10/17/2020 19:30:09
+-- Create Date: 10/17/2020 19:56:17
 -- Design Name: MLUART_RX_tb
 -- Module Name: MLUART_RX_tb - Behavioral
 -- Project Name: 

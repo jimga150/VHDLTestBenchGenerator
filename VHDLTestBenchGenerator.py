@@ -138,7 +138,7 @@ class VHDLModule:
 
     def __init__(self, input_str):
 
-        input_str = self.removeVHDLComments(input_str)
+        input_str = VHDLModule.remove_vhdl_comments(input_str)
 
         things_to_space_out = [
             ["[(]", "("],
@@ -406,7 +406,8 @@ class VHDLModule:
             port_input_decl += "--Resets\n\t"
 
         for r in self.resets:
-            default_val = VHDLModule.get_default_val_for(r.port.interface_type, PolarityType.reverse_polarity(r.polarity))
+            default_val = \
+                VHDLModule.get_default_val_for(r.port.interface_type, PolarityType.reverse_polarity(r.polarity))
             port_input_decl += "signal " + r.port.toString() + " := " + default_val + ";\n\t"
 
         if len(self.resets) > 0:
@@ -474,7 +475,7 @@ class VHDLModule:
             for i in range(0, len(self.generics)):
                 g = self.generics[i]
                 generic_map += "\n\t\t" + g.name + " => " + g.name
-                if i < len(self.generics)-1:
+                if i < len(self.generics) - 1:
                     generic_map += ","
 
             generic_map += "\n\t)\n\t"
@@ -527,7 +528,8 @@ class VHDLModule:
         test_bench_str = re.sub("{{RESETS_INACTIVE}}[\n][ ]{8}", deassert_resets, test_bench_str)
 
         if len(self.resets) == 0:
-            test_bench_str = re.sub("[\n][ ]{8}{{STD_WAIT}}[\n][ ]{8}", "", test_bench_str, 1)  # replace only the first occurrence
+            # replace only the first occurrence
+            test_bench_str = re.sub("[\n][ ]{8}{{STD_WAIT}}[\n][ ]{8}", "", test_bench_str, 1)
 
         # First clock is used for master clock period waits by default
         if len(self.clocks) > 0:
@@ -571,24 +573,25 @@ class VHDLModule:
             for p in self.ports:
                 print(p.port_decl_string())
 
-    def removeVHDLComments(self, commented):
+    @staticmethod
+    def remove_vhdl_comments(commented):
 
         lines = re.split("[\r\n]", commented)
 
-        for l in range(0, len(lines)):
+        for line_index in range(0, len(lines)):
 
-            if len(lines[l]) == 0:
+            if len(lines[line_index]) == 0:
                 continue
 
-            i = lines[l].find("--")
+            i = lines[line_index].find("--")
             if i == 0:
                 lines[i] = ""
             elif i > 0:
-                lines[l] = lines[l][:i]
+                lines[line_index] = lines[line_index][:i]
 
         ans = ""
-        for l in range(0, len(lines)):
-            ans += lines[l] + "\n"
+        for line_index in range(0, len(lines)):
+            ans += lines[line_index] + "\n"
 
         return ans
 
@@ -652,6 +655,7 @@ class VHDLModule:
                 return pair[2] if polarity == PolarityType.NEGATIVE else pair[1]
 
         return "<DEFAULT VALUE NOT FOUND>"
+
 
 @unique
 class PortDir(Enum):

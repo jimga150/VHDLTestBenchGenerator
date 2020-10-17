@@ -325,7 +325,7 @@ class VHDLModule:
 
         # Find reset ports
         # Literally just find any port containing "rst" or "reset" and if it ends in 'n', its negative
-        toRemove = []
+        to_remove = []
         for p in self.ports:
             if "rst" in p.name.lower() or "reset" in p.name.lower():
 
@@ -340,10 +340,10 @@ class VHDLModule:
                 else:
                     pol = PolarityType.POSITIVE
 
-                toRemove.append(p)
+                to_remove.append(p)
                 self.resets.append(Reset(p, pol))
 
-        for p in toRemove:
+        for p in to_remove:
             self.ports.remove(p)
 
         self.valid = True

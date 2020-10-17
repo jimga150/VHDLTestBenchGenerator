@@ -53,6 +53,16 @@ def parse_vhdl(args):
 
     print(test_bench_str)
 
+    # find original file name, without the extension
+    split_path = re.split("[.\\" + slash + "]", args[0])
+    filename = split_path[-2]
+    tb_file_name = filename + "_tb.vhd"
+
+    with open(write_path + tb_file_name, "w") as out_file:
+        out_file.write(test_bench_str)
+
+    print("Written testbench to " + write_path + tb_file_name + ". Happy HDLing.")
+
 
 class VHDLModule:
     tb_template = "----------------------------------------------------------------------------------\n" \

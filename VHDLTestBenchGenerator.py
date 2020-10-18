@@ -320,7 +320,7 @@ class VHDLModule:
                 else:
                     continue
 
-                clock_port = False  # TODO: default clock constructor
+                clock_port = Clock.default()
                 for p in self.ports:
                     if p.name == name:
                         clock_port = p
@@ -789,6 +789,10 @@ class Clock(VHDLControlInput):
     def __init__(self, port, pol):
         super().__init__(port, pol)
         assert port.dir == PortDir.IN
+
+    @classmethod
+    def default(cls):
+        return cls(Port("name", "in", "port_type", "port_range"), PolarityType.INVALID)
 
     def __str__(self):
 

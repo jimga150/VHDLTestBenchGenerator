@@ -65,6 +65,9 @@ def parse_vhdl(args):
 
 
 class VHDLModule:
+
+    comment_delim_str = "--"
+
     tb_template = "----------------------------------------------------------------------------------\n" \
                   "-- Company: \n" \
                   "-- Engineer: \n" \
@@ -368,7 +371,7 @@ class VHDLModule:
         datetime_str = now.strftime("%m/%d/%Y %H:%M:%S")
         test_bench_str = re.sub("{{CURR_DATE}}", datetime_str, test_bench_str)
 
-        numeric_comment = "--"  # TODO: generalize the comment start string
+        numeric_comment = self.comment_delim_str
 
         tb_needs_numeric_lib = False
         for p in self.ports:
@@ -399,7 +402,7 @@ class VHDLModule:
         port_output_decl = ""
 
         if len(self.clocks) > 0:
-            port_input_decl += "--Clocks\n\t"
+            port_input_decl += self.comment_delim_str + "Clocks\n\t"
 
         for c in self.clocks:
             default_val = VHDLModule.get_default_val_for(c.port.interface_type, c.polarity)
@@ -411,7 +414,7 @@ class VHDLModule:
 
         # add resets
         if len(self.resets) > 0:
-            port_input_decl += "--Resets\n\t"
+            port_input_decl += self.comment_delim_str + "Resets\n\t"
 
         for r in self.resets:
             default_val = \
@@ -428,7 +431,7 @@ class VHDLModule:
 
                 if not found_input:
                     found_input = True
-                    port_input_decl += "--General inputs\n\t"
+                    port_input_decl += self.comment_delim_str + "General inputs\n\t"
 
                 default_val = VHDLModule.get_default_val_for(p.interface_type, PolarityType.POSITIVE)
                 port_input_decl += "signal " + str(p) + " := " + default_val + ";\n\t"
@@ -452,7 +455,7 @@ class VHDLModule:
             clock_periods += "constant " + c.period_name() + " : time := 10 ns;\n\t"
 
         if len(generic_declarations) > 0:
-            generic_declarations = "--Generics\n\t" + generic_declarations
+            generic_declarations = self.comment_delim_str + "Generics\n\t" + generic_declarations
             generic_declarations += "\n\t"
 
         if len(port_input_decl) > 0:
@@ -460,15 +463,15 @@ class VHDLModule:
 
         # print("Inouts: " + port_in_out_decl)
         if len(port_in_out_decl) > 0:
-            port_in_out_decl = "--In-Outs\n\t" + generic_declarations
+            port_in_out_decl = self.comment_delim_str + "In-Outs\n\t" + generic_declarations
             port_in_out_decl += "\n\t"
 
         if len(port_output_decl) > 0:
-            port_output_decl = "--Outputs\n\t" + port_output_decl
+            port_output_decl = self.comment_delim_str + "Outputs\n\t" + port_output_decl
             port_output_decl += "\n\t"
 
         if len(clock_periods) > 0:
-            clock_periods = "\n\t--Clock Periods\n\t" + clock_periods
+            clock_periods = "\n\t" + self.comment_delim_str + "Clock Periods\n\t" + clock_periods
 
         test_bench_str = re.sub("{{GENERIC_PARAM_DECL}}[\\n]([ ]{4}|\\t)", generic_declarations, test_bench_str)
         test_bench_str = re.sub("{{INPUT_SIGNAL_DECL}}[\\n]([ ]{4}|\\t)", port_input_decl, test_bench_str)
@@ -520,7 +523,7 @@ class VHDLModule:
             clock_drivers += c.port.name + " <= not " + c.port.name + " after " + c.period_name() + "/2;\n\t"
 
         if len(clock_drivers) > 0:
-            clock_drivers = "--Clock Drivers\n\t" + clock_drivers
+            clock_drivers = self.comment_delim_str + "Clock Drivers\n\t" + clock_drivers
 
         test_bench_str = re.sub("{{CLOCK_DRIVERS}}", clock_drivers, test_bench_str)
 
@@ -591,7 +594,7 @@ class VHDLModule:
             if len(lines[line_index]) == 0:
                 continue
 
-            i = lines[line_index].find("--")
+            i = lines[line_index].find(VHDLModule.comment_delim_str)
             if i == 0:
                 lines[i] = ""
             elif i > 0:

@@ -678,7 +678,7 @@ class VHDLModule:
             # if we find a comment, take it out, or delete the line if its all comment.
             i = lines[line_index].find(VHDLModule.comment_delim_str)
             if i == 0:
-                lines[i] = ""
+                lines[line_index] = ""
             elif i > 0:
                 lines[line_index] = lines[line_index][:i]
 
@@ -810,7 +810,7 @@ class Port(VHDLInterface):
         return self.name + " : " + self.interface_type + range_str
 
     def port_decl_string(self):
-        
+
         if not (self.default_val is None):
             default_assignment = " := " + self.default_val
         else:

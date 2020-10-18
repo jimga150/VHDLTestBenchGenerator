@@ -731,10 +731,17 @@ class Port(VHDLInterface):
 
         return PortDir.INVALID
 
-    def port_dir_toString(self):
-        if self.dir == PortDir.IN: return "in"
-        if self.dir == PortDir.OUT: return "out"
-        if self.dir == PortDir.INOUT: return "inout"
+    def port_dir_string(self):
+
+        if self.dir == PortDir.IN:
+            return "in"
+
+        if self.dir == PortDir.OUT:
+            return "out"
+
+        if self.dir == PortDir.INOUT:
+            return "inout"
+
         return "<ERROR>"
 
 
@@ -761,7 +768,10 @@ class VHDLControlInput:
 
     @staticmethod
     def reverse_polarity(orig):
-        if orig == PolarityType.INVALID: return orig
+
+        if orig == PolarityType.INVALID:
+            return orig
+
         return PolarityType.NEGATIVE if orig == PolarityType.POSITIVE else PolarityType.POSITIVE
 
 

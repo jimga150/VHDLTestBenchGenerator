@@ -371,6 +371,8 @@ class VHDLModule:
 
     def build_test_bench_str(self):
 
+        # most of this is plain, honest, replacement of template keywords.
+
         test_bench_str = self.tb_template
 
         test_bench_str = re.sub("{{MODULE_NAME}}", self.name, test_bench_str)
@@ -380,6 +382,7 @@ class VHDLModule:
         datetime_str = now.strftime("%m/%d/%Y %H:%M:%S")
         test_bench_str = re.sub("{{CURR_DATE}}", datetime_str, test_bench_str)
 
+        # Only use the numeric library if its necessary
         numeric_comment = self.comment_delim_str
 
         tb_needs_numeric_lib = False
@@ -403,6 +406,8 @@ class VHDLModule:
         for g in self.generics:
             generic_declarations += "constant " + str(g) + ";\n\t"
 
+        # You'll see this line and its siblings scattered throughout this function, just to keep the line skips
+        # consistent.
         if len(self.generics) > 0:
             generic_declarations += "\n\t"
 
@@ -470,7 +475,6 @@ class VHDLModule:
         if len(port_input_decl) > 0:
             port_input_decl += "\n\t"
 
-        # print("Inouts: " + port_in_out_decl)
         if len(port_in_out_decl) > 0:
             port_in_out_decl = self.comment_delim_str + "In-Outs\n\t" + generic_declarations
             port_in_out_decl += "\n\t"
@@ -596,6 +600,7 @@ class VHDLModule:
     @staticmethod
     def remove_vhdl_comments(commented):
 
+        # bust em open boys
         lines = re.split("[\r\n]", commented)
 
         for line_index in range(0, len(lines)):
@@ -603,12 +608,14 @@ class VHDLModule:
             if len(lines[line_index]) == 0:
                 continue
 
+            # if we find a comment, take it out, or delete the line if its all comment.
             i = lines[line_index].find(VHDLModule.comment_delim_str)
             if i == 0:
                 lines[i] = ""
             elif i > 0:
                 lines[line_index] = lines[line_index][:i]
 
+        # reassemble the test file
         ans = ""
         for line_index in range(0, len(lines)):
             ans += lines[line_index] + "\n"

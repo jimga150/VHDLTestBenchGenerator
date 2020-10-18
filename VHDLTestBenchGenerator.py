@@ -223,7 +223,7 @@ class VHDLModule:
                     offset_index += 1
 
                 library_definitions.append(words[i + offset_index] + "\n")
-            
+
             # detecting the 'entity' statement
             if (not entity_found) and words[i].lower() == "entity":
                 self.name = words[i + 1]
@@ -516,7 +516,6 @@ class VHDLModule:
                 port_output_decl += "signal " + str(p) + ";\n\t"
 
             else:
-                # TODO: add error prefix to errors
                 print("ERROR: Port direction undefined: " + p.dir)
                 return ""
 

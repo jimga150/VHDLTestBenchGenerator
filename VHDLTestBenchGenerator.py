@@ -34,14 +34,6 @@ def parse_vhdl(args):
         print(args)
         print(parsed_args)
 
-    # usage_str = "Usage: python3 VHDL_testbench_generator.py [<args>] <input file> [<output path>]\n" \
-    #             "File must be a valid VHDL file with no parse errors.\n" \
-    #             "It must contain only one entity with at least one input port, and the generated testbench will use " \
-    #             "the first architecture in the file to gather relevant information.\n" \
-    #             "<output path> will default to your home directory.\n" \
-    #             "Arguments available: \n" \
-    #             "-v\tVerbose mode\n"
-
     if not (input_file.lower().endswith(".vhd") or input_file.lower().endswith(".vhdl")):
         print("Must specify a VHDL file.")
         parser.print_help()
@@ -94,7 +86,9 @@ def parse_vhdl(args):
     if outfile is None:
         # find original file name, without the extension
         # generate test bench file name
-        split_path = re.split("[.\\" + slash + "]", str(input_file))
+        # print(input_file)
+        split_path = re.split("[.\\/]", input_file)
+        # print(split_path)
         filename = split_path[-2]
         out_file_name += filename + "_tb.vhd"
 

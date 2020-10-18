@@ -38,33 +38,11 @@ end ThreeByteSorter;
 
 architecture Structural of ThreeByteSorter is
 
-    signal low_23, high_23, high_low23_1 : std_logic_vector(7 downto 0);
+    
 
 begin
 
-    sorter_23 : entity work.Sorter
-    port map(
-        data1 => data2,
-        data2 => data3,
-        high => high_23,
-        low => low_23
-    );
-    
-    sorter_1 : entity work.Sorter
-    port map(
-        data1 => data1,
-        data2 => low_23,
-        high => high_low23_1,
-        low => low
-    );
-    
-    sorter_final : entity work.Sorter
-    port map(
-        data1 => high_23,
-        data2 => high_low23_1,
-        high => high,
-        low => med
-    );
+    --Removed
 
 
 end Structural;

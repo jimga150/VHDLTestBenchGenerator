@@ -2,7 +2,7 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 10/18/2020 13:19:02
+-- Create Date: 10/18/2020 14:17:23
 -- Design Name: Filter_SM_tb
 -- Module Name: Filter_SM_tb - Behavioral
 -- Project Name: 
@@ -21,15 +21,7 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
 use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
 
 entity Filter_SM_tb is
 end Filter_SM_tb;

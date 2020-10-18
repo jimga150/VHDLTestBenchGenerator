@@ -2,7 +2,7 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 10/18/2020 13:18:33
+-- Create Date: 10/18/2020 14:17:27
 -- Design Name: MLUART_RX_tb
 -- Module Name: MLUART_RX_tb - Behavioral
 -- Project Name: 
@@ -21,15 +21,8 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
+use IEEE.NUMERIC_STD.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 entity MLUART_RX_tb is
 end MLUART_RX_tb;

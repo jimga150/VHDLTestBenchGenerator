@@ -129,18 +129,7 @@ class VHDLModule:
                   "----------------------------------------------------------------------------------\n" \
                   "\n" \
                   "\n" \
-                  "library IEEE;\n" \
-                  "use IEEE.STD_LOGIC_1164.ALL;\n" \
-                  "\n" \
-                  "-- Uncomment the following library declaration if using\n" \
-                  "-- arithmetic functions with Signed or Unsigned values\n" \
-                  "{{NUMERIC_COMMENT}}use IEEE.NUMERIC_STD.ALL;\n" \
-                  "\n" \
-                  "-- Uncomment the following library declaration if instantiating\n" \
-                  "-- any Xilinx leaf cells in this code.\n" \
-                  "--library UNISIM;\n" \
-                  "--use UNISIM.VComponents.all;\n" \
-                  "\n" \
+                  "{{LIBRARIES}}\n" \
                   "entity {{TESTBENCH_NAME}} is\n" \
                   "end {{TESTBENCH_NAME}};\n" \
                   "\n" \
@@ -169,6 +158,8 @@ class VHDLModule:
                   "    end process;\n" \
                   "\n" \
                   "end Behavioral;\n"
+
+    library_includes = ""
 
     ports = []
     generics = []
@@ -219,10 +210,20 @@ class VHDLModule:
         generic_names = []
         port_names = []
 
+        library_definitions = []
+
         i = 0
         while i < len(words):
 
-            # print(words[i])
+            if words[i].lower() == "library" or words[i].lower() == "use":
+
+                offset_index = 0
+                while words[i + offset_index] != ";":
+                    library_definitions.append(words[i + offset_index])
+                    offset_index += 1
+
+                library_definitions.append(words[i + offset_index] + "\n")
+            
             # detecting the 'entity' statement
             if (not entity_found) and words[i].lower() == "entity":
                 self.name = words[i + 1]
@@ -341,6 +342,15 @@ class VHDLModule:
 
             i = i + 1
 
+        for item in library_definitions:
+            if item[0] == ';' and self.library_includes[-1] == ' ':  # remove last space
+                self.library_includes = self.library_includes[:-1]
+
+            self.library_includes += item
+
+            if item[-1] != '\n':  # Add space if this isn't the carriage return
+                self.library_includes += " "
+
         if not entity_found:
             print("No entity found.")
             return
@@ -436,32 +446,13 @@ class VHDLModule:
 
         test_bench_str = self.tb_template
 
+        test_bench_str = re.sub("{{LIBRARIES}}", self.library_includes, test_bench_str)
         test_bench_str = re.sub("{{MODULE_NAME}}", self.name, test_bench_str)
         test_bench_str = re.sub("{{TESTBENCH_NAME}}", self.name + "_tb", test_bench_str)
 
         now = datetime.now()
         datetime_str = now.strftime("%m/%d/%Y %H:%M:%S")
         test_bench_str = re.sub("{{CURR_DATE}}", datetime_str, test_bench_str)
-
-        # Only use the numeric library if its necessary
-        numeric_comment = self.comment_delim_str
-
-        tb_needs_numeric_lib = False
-        for p in self.ports:
-            if VHDLModule.needs_numeric_lib(p.interface_type):
-                tb_needs_numeric_lib = True
-                break
-
-        if not tb_needs_numeric_lib:
-            for g in self.generics:
-                if VHDLModule.needs_numeric_lib(g.interface_type):
-                    tb_needs_numeric_lib = True
-                    break
-
-        if tb_needs_numeric_lib:
-            numeric_comment = ""
-
-        test_bench_str = re.sub("{{NUMERIC_COMMENT}}", numeric_comment, test_bench_str)
 
         generic_declarations = ""
         for g in self.generics:
@@ -633,6 +624,10 @@ class VHDLModule:
         return test_bench_str
 
     def print_info(self):
+
+        print("\nLibraries:")
+        print(self.library_includes)
+
         print("\nGenerics:")
 
         if len(self.generics) == 0:
@@ -710,18 +705,6 @@ class VHDLModule:
             return True
 
         return port.dir != PortDir.IN
-
-    @staticmethod
-    def needs_numeric_lib(type_in):
-        type_lowcase = type_in.lower()
-
-        numeric_types = ["signed", "unsigned", "natural"]
-
-        for ntype in numeric_types:
-            if ntype in type_lowcase:
-                return True
-
-        return False
 
     @staticmethod
     def get_default_val_for(type_in, polarity):

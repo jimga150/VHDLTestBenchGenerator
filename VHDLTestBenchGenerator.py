@@ -308,12 +308,25 @@ class VHDLModule:
                         range_offset = 2
 
                     if words[i + range_offset + 1] == ":=":  # Default val detected
-                        default_val = words[i + range_offset + 2]
-                        range_offset += 2
+
+                        d_offset = 2
+                        default_val = ""
+                        while words[i + range_offset + d_offset] != ";":
+                            default_val += words[i + range_offset + d_offset] + " "
+                            d_offset += 1
+
+                        # Special treatment: un-space out parentheses
+                        default_val = re.sub("[ ][(][ ]", "(", default_val)
+                        default_val = re.sub("[ ][)][ ]", ")", default_val)
+
+                        if default_val[-1] == " ":
+                            default_val = default_val[:-1]  # remove last space
+                        
                     else:
                         default_val = None
+                        d_offset = 1
 
-                    i = i + range_offset + 2
+                    i = i + range_offset + d_offset + 1  # skip semiolon
 
                     for port_name in port_names:
                         self.ports.append(Port(port_name, port_direction, port_type, interface_range, default_val))

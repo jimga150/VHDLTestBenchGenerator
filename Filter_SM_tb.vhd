@@ -2,7 +2,7 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 10/18/2020 13:02:44
+-- Create Date: 10/18/2020 13:14:53
 -- Design Name: Filter_SM_tb
 -- Module Name: Filter_SM_tb - Behavioral
 -- Project Name: 
@@ -56,6 +56,7 @@ architecture Behavioral of Filter_SM_tb is
     signal numpixels_in : std_logic_vector(31 downto 0) := (others => '0');
     signal num_cols_in : std_logic_vector(0 to test_int - 1) := (others => '0');
     signal sl_sm_done : std_logic := '0';
+    signal num_thingys : integer := test_int + to_integer(test_generic);
     
     --Outputs
     signal en1 : std_logic;
@@ -88,6 +89,7 @@ begin
         numpixels_in => numpixels_in,
         num_cols_in => num_cols_in,
         sl_sm_done => sl_sm_done,
+        num_thingys => num_thingys,
         en1 => en1,
         en2 => en2,
         addr => addr,

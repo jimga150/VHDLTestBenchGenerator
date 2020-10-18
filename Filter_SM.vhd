@@ -46,6 +46,7 @@ entity Filter_SM is
         numpixels_in : in std_logic_vector(31 downto 0);
         num_cols_in : in std_logic_vector(0 to test_int - 1);
         sl_sm_done : in std_logic;
+        num_thingys : in integer := test_int + to_integer(test_generic);
         
         en1, en2 : out std_logic;
         addr, numpixels_out : out std_logic_vector(test_int-1 downto 0);

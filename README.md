@@ -2,6 +2,7 @@
 VHDL Test Bench Generator in Python 3.
 
 This script takes a single VHDL file containing one entity declaration and one or more architectures, and produces a test bench file that does the following: 
+* Declares and uses all packages from the input file
 * Creates and assigns all relevant inputs and output ports, as well as generics
 * Groups clocks and resets separately from GPIO
 * Drives all clocks using a constant for the clock period

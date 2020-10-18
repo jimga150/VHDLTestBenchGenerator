@@ -2,7 +2,7 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 10/18/2020 12:23:21
+-- Create Date: 10/18/2020 13:02:25
 -- Design Name: ThreeByteSorter_tb
 -- Module Name: ThreeByteSorter_tb - Behavioral
 -- Project Name: 
@@ -37,9 +37,9 @@ end ThreeByteSorter_tb;
 architecture Behavioral of ThreeByteSorter_tb is
     
     --General inputs
-    signal data1 : STD_LOGIC_VECTOR(7 downto 0) := (others => '0');
-    signal data2 : STD_LOGIC_VECTOR(7 downto 0) := (others => '0');
-    signal data3 : STD_LOGIC_VECTOR(7 downto 0) := (others => '0');
+    signal data1 : STD_LOGIC_VECTOR(7 downto 0) := x"DE";
+    signal data2 : STD_LOGIC_VECTOR(7 downto 0) := x"DE";
+    signal data3 : STD_LOGIC_VECTOR(7 downto 0) := x"DE";
     
     --Outputs
     signal high : STD_LOGIC_VECTOR(7 downto 0);

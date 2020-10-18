@@ -32,7 +32,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 --use UNISIM.VComponents.all;
 
 entity ThreeByteSorter is
-    Port ( data1, data2, data3 : in STD_LOGIC_VECTOR (7 downto 0);
+    Port ( data1, data2, data3 : in STD_LOGIC_VECTOR (7 downto 0) := x"DE";
            high, med, low : out STD_LOGIC_VECTOR (7 downto 0));
 end ThreeByteSorter;
 

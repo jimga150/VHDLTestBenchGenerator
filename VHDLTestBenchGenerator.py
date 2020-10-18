@@ -273,7 +273,7 @@ class VHDLModule:
                         i += 5
 
                     for generic_name in generic_names:
-                        self.generics.append(Generic(generic_name, generic_type, generic_default_val, interface_range))
+                        self.generics.append(Generic(generic_name, generic_type, interface_range, generic_default_val))
 
                     generic_names = []
                     continue
@@ -281,7 +281,8 @@ class VHDLModule:
                 # keep recording the names of the generics otherwise
                 generic_names.append(words[i])
 
-            # port detection mode: much like generic detection, but these items have directions.
+            # port detection mode: much like generic detection, but these items have directions,
+            # and default values are optional.
             if entity_found and generic_found and port_found:
 
                 if words[i] == ",":
@@ -292,23 +293,30 @@ class VHDLModule:
                     port_direction = words[i + 1]
                     port_type = words[i + 2]
 
-                    if words[i + 3] == "(":
+                    if words[i + 3] == "(":  # Range detected
 
-                        w = 4
+                        range_offset = 4
                         range_str = ""
-                        while not words[i + w] == ")":
-                            range_str += words[i + w] + " "
-                            w += 1
+                        while not words[i + range_offset] == ")":
+                            range_str += words[i + range_offset] + " "
+                            range_offset += 1
 
                         interface_range = range_str[:-1]  # remove last space
-                        i = i + w + 2
 
                     else:
                         interface_range = ""
-                        i = i + 4
+                        range_offset = 2
+
+                    if words[i + range_offset + 1] == ":=":  # Default val detected
+                        default_val = words[i + range_offset + 2]
+                        range_offset += 2
+                    else:
+                        default_val = None
+
+                    i = i + range_offset + 2
 
                     for port_name in port_names:
-                        self.ports.append(Port(port_name, port_direction, port_type, interface_range))
+                        self.ports.append(Port(port_name, port_direction, port_type, interface_range, default_val))
 
                     port_names = []
                     continue
@@ -487,13 +495,17 @@ class VHDLModule:
                     found_input = True
                     port_input_decl += self.comment_delim_str + "General inputs\n\t"
 
-                default_val = VHDLModule.get_default_val_for(p.interface_type, PolarityType.POSITIVE)
-                port_input_decl += "signal " + str(p) + " := " + default_val + ";\n\t"
+                if p.default_val is None:
+                    p.default_val = VHDLModule.get_default_val_for(p.interface_type, PolarityType.POSITIVE)
+
+                port_input_decl += "signal " + str(p) + " := " + p.default_val + ";\n\t"
 
             elif p.dir == PortDir.INOUT:
 
-                default_val = VHDLModule.get_default_val_for(p.interface_type, PolarityType.POSITIVE)
-                port_in_out_decl += "signal " + str(p) + " := " + default_val + ";\n\t"
+                if p.default_val is None:
+                    p.default_val = VHDLModule.get_default_val_for(p.interface_type, PolarityType.POSITIVE)
+
+                port_in_out_decl += "signal " + str(p) + " := " + p.default_val + ";\n\t"
 
             elif p.dir == PortDir.OUT:
 
@@ -752,31 +764,33 @@ class VHDLInterface:
     name = ""
     interface_type = ""
     interface_range = ""
+    default_val = ""
 
-    def __init__(self, name, interface_type, interface_range):
+    def __init__(self, name, interface_type, interface_range, default_val):
         self.name = name
         self.interface_type = interface_type
         self.interface_range = interface_range
+        self.default_val = default_val
 
     @classmethod
     def default(cls):
-        return cls("<INTERFACE_NAME>", "<INTERFACE_TYPE>", "<INTERFACE_RANGE>")
+        return cls("<INTERFACE_NAME>", "<INTERFACE_TYPE>", "<INTERFACE_RANGE>", "<DEFAULT_VAL>")
 
     def is_bus(self):
-        return len(self.interface_range) > 0
+        return len(self.interface_range) > 0 and self.interface_range != "<INTERFACE_RANGE>"
 
 
-# TODO: add default values to ports (really promote the item to VHDLInterface)
 class Port(VHDLInterface):
+
     dir = PortDir.INVALID
 
-    def __init__(self, name, dir_str, port_type, port_range):
-        super().__init__(name, port_type, port_range)
+    def __init__(self, name, dir_str, port_type, port_range, default_val=None):
+        super().__init__(name, port_type, port_range, default_val)
         self.dir = Port.decode_port_dir(dir_str)
 
     @classmethod
     def default(cls):
-        return cls("<PORT_NAME>", "<PORT_DIR>", "<PORT_TYPE>", "<PORT_RANGE>")
+        return cls("<PORT_NAME>", "<PORT_DIR>", "<PORT_TYPE>", "<PORT_RANGE>", "<PORT_DEFAULT_VAL>")
 
     def __str__(self):
         range_str = "(" + str(self.interface_range) + ")" if self.is_bus() else ""
@@ -816,11 +830,6 @@ class Port(VHDLInterface):
 
 
 class Generic(VHDLInterface):
-    default_val = ""
-
-    def __init__(self, name, generic_type, default_val, generic_range):
-        super().__init__(name, generic_type, generic_range)
-        self.default_val = default_val
 
     def __str__(self):
         range_str = "(" + str(self.interface_range) + ")" if self.is_bus() else ""

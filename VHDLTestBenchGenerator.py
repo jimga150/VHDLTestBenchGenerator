@@ -9,8 +9,11 @@ from datetime import datetime
 def parse_vhdl(args):
     print(args)
 
-    usage_str = "Usage: java -jar VHDL_testbench_generator.jar <input file> (<output path>)\nFile must be a valid " \
-                "VHDL file with no parse errors.\n"
+    usage_str = "Usage: python3 VHDL_testbench_generator.py <input file> (<output path>)\n" \
+                "File must be a valid VHDL file with no parse errors.\n" \
+                "It must contain only one entity with at least one input port, and the generated testbench will use " \
+                "the first architecture in the file to gather relevant information.\n" \
+                "<output path> will default to your home directory.\n"
 
     if len(args) == 0 or len(args[0]) == 0:
         print("Must specify a file.")

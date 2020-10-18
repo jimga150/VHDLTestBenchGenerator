@@ -191,11 +191,14 @@ class VHDLModule:
                 i += 1
                 continue
 
+            # detecting the 'generic' statement, but only after we detected 'entity'
             if entity_found and (not generic_found) and words[i].lower() == "generic":
                 generic_found = True
                 i += 2
                 continue
 
+            # detecting the 'port' statement, but only after we detected 'entity' (if we havent detected a generic
+            # statement yet, just let it slide since that's optional)
             if entity_found and (not port_found) and words[i].lower() == "port":
                 generic_found = True  # no generics but we move past it
                 port_found = True
@@ -204,15 +207,17 @@ class VHDLModule:
 
             # print(entity_found, generic_found, port_found)
 
+            # Generic item detection. look for commas and colons to delimit names, types, ranges, and default values
             if entity_found and generic_found and (not port_found):
 
                 if words[i] == ",":
                     i += 1
                     continue
 
+                # found a colon, meaning that the non-comma words before this were generic names.
                 if words[i] == ":":
                     generic_type = words[i + 1]
-                    if words[i + 2] == "(":
+                    if words[i + 2] == "(":  # item is a bus
                         interface_range = words[i + 3] + " " + words[i + 4] + " " + words[i + 5]
 
                         if words[i + 8] == "(" and words[i + 9].lower() == "others":
@@ -222,7 +227,7 @@ class VHDLModule:
                             generic_default_val = words[i + 8]
                             i += 10
 
-                    else:
+                    else:  # item is NOT a bus
                         interface_range = ""
                         generic_default_val = words[i + 3]
                         i += 5
@@ -233,8 +238,10 @@ class VHDLModule:
                     generic_names = []
                     continue
 
+                # keep recording the names of the generics otherwise
                 generic_names.append(words[i])
 
+            # port detection mode: much like generic detection, but these items have directions.
             if entity_found and generic_found and port_found:
 
                 if words[i] == ",":
@@ -278,11 +285,13 @@ class VHDLModule:
             return
 
         if not port_found:
+            # assume that ports are essential to a design: if you're not using any, why is this its own entity
+            # anyways? and especially, why make a test bench for it?
             print("No ports found.")
             return
 
         # find clocks
-        # Strategy 1: look for "rising_edge" and "falling_edge"
+        # Strategy 1: look for "rising_edge" and "falling_edge" convenience functions
         for i in range(0, len(words)):
 
             if words[i].lower() == "rising_edge":
@@ -305,7 +314,7 @@ class VHDLModule:
 
             self.clocks.append(Clock(clock_port, pol))
 
-        # Strategy 2: look for manual instances of the strategy 1 function names
+        # Strategy 2: look for manual instances of clock usages: the "'edge" property
         for i in range(0, len(words)):
             if "'event" in words[i].lower():
                 name = re.split("[']", words[i])[0]

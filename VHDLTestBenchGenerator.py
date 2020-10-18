@@ -321,7 +321,7 @@ class VHDLModule:
 
                         if default_val[-1] == " ":
                             default_val = default_val[:-1]  # remove last space
-                        
+
                     else:
                         default_val = None
                         d_offset = 1
@@ -810,7 +810,13 @@ class Port(VHDLInterface):
         return self.name + " : " + self.interface_type + range_str
 
     def port_decl_string(self):
-        return str(self).replace(" : ", " : " + self.port_dir_string() + " ")
+        
+        if not (self.default_val is None):
+            default_assignment = " := " + self.default_val
+        else:
+            default_assignment = ""
+
+        return str(self).replace(" : ", " : " + self.port_dir_string() + " ") + default_assignment
 
     @staticmethod
     def decode_port_dir(port_dir_str):

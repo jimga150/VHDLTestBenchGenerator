@@ -380,7 +380,7 @@ class VHDLModule:
 
         generic_declarations = ""
         for g in self.generics:
-            generic_declarations += "constant " + g.toString() + ";\n\t"
+            generic_declarations += "constant " + str(g) + ";\n\t"
 
         if len(self.generics) > 0:
             generic_declarations += "\n\t"
@@ -395,8 +395,7 @@ class VHDLModule:
         for c in self.clocks:
             default_val = VHDLModule.get_default_val_for(c.port.interface_type, c.polarity)
 
-            # TODO: change toString methods to python's str() method override
-            port_input_decl += "signal " + c.port.toString() + " := " + default_val + ";\n\t"
+            port_input_decl += "signal " + str(c.port) + " := " + default_val + ";\n\t"
 
         if len(self.clocks) > 0:
             port_input_decl += "\n\t"
@@ -408,7 +407,7 @@ class VHDLModule:
         for r in self.resets:
             default_val = \
                 VHDLModule.get_default_val_for(r.port.interface_type, PolarityType.reverse_polarity(r.polarity))
-            port_input_decl += "signal " + r.port.toString() + " := " + default_val + ";\n\t"
+            port_input_decl += "signal " + str(r.port) + " := " + default_val + ";\n\t"
 
         if len(self.resets) > 0:
             port_input_decl += "\n\t"
@@ -423,16 +422,16 @@ class VHDLModule:
                     port_input_decl += "--General inputs\n\t"
 
                 default_val = VHDLModule.get_default_val_for(p.interface_type, PolarityType.POSITIVE)
-                port_input_decl += "signal " + p.toString() + " := " + default_val + ";\n\t"
+                port_input_decl += "signal " + str(p) + " := " + default_val + ";\n\t"
 
             elif p.dir == PortDir.INOUT:
 
                 default_val = VHDLModule.get_default_val_for(p.interface_type, PolarityType.POSITIVE)
-                port_in_out_decl += "signal " + p.toString() + " := " + default_val + ";\n\t"
+                port_in_out_decl += "signal " + str(p) + " := " + default_val + ";\n\t"
 
             elif p.dir == PortDir.OUT:
 
-                port_output_decl += "signal " + p.toString() + ";\n\t"
+                port_output_decl += "signal " + str(p) + ";\n\t"
 
             else:
                 # TODO: add error prefix to errors
@@ -550,21 +549,21 @@ class VHDLModule:
             print("None found.")
         else:
             for g in self.generics:
-                print(g.toString())
+                print(str(g))
 
         print("\nClock Ports:")
         if len(self.clocks) == 0:
             print("None found.")
         else:
             for c in self.clocks:
-                print(c.port.port_decl_string() + " : " + c.polarity_toString())
+                print(str(c))
 
         print("\nReset Ports:")
         if len(self.resets) == 0:
             print("None found.")
         else:
             for r in self.resets:
-                print(r.port.port_decl_string() + " : " + r.polarity_toString())
+                print(str(r))
 
         print("\nOther Ports:")
         if len(self.ports) == 0:
@@ -709,12 +708,12 @@ class Port(VHDLInterface):
     def default(cls):
         return cls("<PORT_NAME>", "<PORT_DIR>", "<PORT_TYPE>", "<PORT_RANGE>")
 
-    def toString(self):
+    def __str__(self):
         range_str = "(" + str(self.interface_range) + ")" if self.is_bus() else ""
         return self.name + " : " + self.interface_type + range_str
 
     def port_decl_string(self):
-        return self.toString().replace(" : ", " : " + self.port_dir_toString() + " ")
+        return str(self).replace(" : ", " : " + self.port_dir_string() + " ")
 
     @staticmethod
     def decode_port_dir(port_dir_str):
@@ -746,7 +745,7 @@ class Generic(VHDLInterface):
         super().__init__(name, generic_type, generic_range)
         self.default_val = default_val
 
-    def toString(self):
+    def __str__(self):
         range_str = "(" + str(self.interface_range) + ")" if self.is_bus() else ""
         return self.name + " : " + self.interface_type + range_str + " := " + self.default_val
 
@@ -772,13 +771,16 @@ class Clock(VHDLControlInput):
         super().__init__(port, pol)
         assert port.dir == PortDir.IN
 
-    def polarity_toString(self):
-        if self.polarity == PolarityType.POSITIVE:
-            return "Rising Edge"
-        if self.polarity == PolarityType.NEGATIVE:
-            return "Falling Edge"
+    def __str__(self):
 
-        return "Invalid Polarity"
+        if self.polarity == PolarityType.POSITIVE:
+            polarity_str = "Rising Edge"
+        elif self.polarity == PolarityType.NEGATIVE:
+            polarity_str = "Falling Edge"
+        else:
+            polarity_str = "Invalid Polarity"
+
+        return self.port.port_decl_string() + " : " + polarity_str
 
     def period_name(self):
         return self.port.name + "_period"
@@ -790,13 +792,16 @@ class Reset(VHDLControlInput):
         super().__init__(port, pol)
         assert port.dir == PortDir.IN
 
-    def polarity_toString(self):
-        if self.polarity == PolarityType.POSITIVE:
-            return "Active High"
-        if self.polarity == PolarityType.NEGATIVE:
-            return "Active Low"
+    def __str__(self):
 
-        return "Invalid Polarity"
+        if self.polarity == PolarityType.POSITIVE:
+            polarity_str = "Active High"
+        elif self.polarity == PolarityType.NEGATIVE:
+            polarity_str = "Active Low"
+        else:
+            polarity_str = "Invalid Polarity"
+
+        return self.port.port_decl_string() + " : " + polarity_str
 
 
 if __name__ == '__main__':

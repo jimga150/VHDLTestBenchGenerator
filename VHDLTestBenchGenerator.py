@@ -4,71 +4,114 @@ import sys
 from enum import Enum, auto, unique
 from pathlib import Path
 from datetime import datetime
+import argparse
 
 
 def parse_vhdl(args):
-    print(args)
 
-    usage_str = "Usage: python3 VHDL_testbench_generator.py <input file> (<output path>)\n" \
-                "File must be a valid VHDL file with no parse errors.\n" \
-                "It must contain only one entity with at least one input port, and the generated testbench will use " \
-                "the first architecture in the file to gather relevant information.\n" \
-                "<output path> will default to your home directory.\n"
+    parser = argparse.ArgumentParser(
+        description="Generates a testbench template for a VHDL module, including clock and reset detection. File must "
+                    "be a valid VHDL file with no parse errors. It must contain only one entity with at least one "
+                    "input port, and the generated testbench will use the first architecture in the file to gather "
+                    "relevant information. "
+    )
+    parser.add_argument("-v", "--verbose", action="store_true", help="verbose mode")
+    parser.add_argument("input_file", help="The VHDL module file to generate the testbench template for")
 
-    if len(args) == 0 or len(args[0]) == 0:
-        print("Must specify a file.")
-        print(usage_str)
-        return
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--outpath", help="path to write template to (as <modulename>_tb.vhd")
+    group.add_argument("-o", "--out", help="output file. if neither --outpath nor --out is specified, testbench "
+                                           "template is written to the home directory.")
 
-    if not (args[0].lower().endswith(".vhd") or args[0].lower().endswith(".vhdl")):
+    parsed_args = parser.parse_args(args)
+    input_file = parsed_args.input_file
+    outpath = parsed_args.outpath
+    outfile = parsed_args.out
+    verbose_mode = parsed_args.verbose
+
+    if verbose_mode:
+        print("args:")
+        print(args)
+        print(parsed_args)
+
+    # usage_str = "Usage: python3 VHDL_testbench_generator.py [<args>] <input file> [<output path>]\n" \
+    #             "File must be a valid VHDL file with no parse errors.\n" \
+    #             "It must contain only one entity with at least one input port, and the generated testbench will use " \
+    #             "the first architecture in the file to gather relevant information.\n" \
+    #             "<output path> will default to your home directory.\n" \
+    #             "Arguments available: \n" \
+    #             "-v\tVerbose mode\n"
+
+    if not (input_file.lower().endswith(".vhd") or input_file.lower().endswith(".vhdl")):
         print("Must specify a VHDL file.")
-        print(usage_str)
+        parser.print_help()
         return
 
     input_str = ""
-    with open(args[0], "r") as input_file:
-        input_str += input_file.read()
+    try:
+        with open(input_file, "r") as infile:
+            input_str += infile.read()
+    except OSError as e:
+        print("Input file read error:\n" + str(e))
+        parser.print_help()
+        return
 
     if len(input_str) == 0:
         print("No data found in input file.")
-        print(usage_str)
+        parser.print_help()
         return
 
-    slash = os.path.sep
-    write_path = str(Path.home()) + slash
-
-    if len(args) > 1 and len(args[1]) > 0:
-        write_path = args[1]
-        if args[1][-1] != slash:
-            write_path += slash
-
-    print(input_str)
+    if verbose_mode:
+        print(input_str)
 
     module = VHDLModule(input_str)
 
     if not module.valid:
         print("Invalid VHDL Entity.")
+        parser.print_help()
         return
 
-    module.print_info()
+    if verbose_mode:
+        module.print_info()
 
     test_bench_str = module.build_test_bench_str()
 
-    print(test_bench_str)
+    if verbose_mode:
+        print(test_bench_str)
 
-    # find original file name, without the extension
-    split_path = re.split("[.\\" + slash + "]", args[0])
-    filename = split_path[-2]
-    tb_file_name = filename + "_tb.vhd"
+    slash = os.path.sep
+    write_path = str(Path.home()) + slash
 
-    with open(write_path + tb_file_name, "w") as out_file:
-        out_file.write(test_bench_str)
+    if not (outfile is None):
+        write_path = outfile
+    elif not (outpath is None):
+        write_path = outpath
+        if write_path[-1] != slash:
+            write_path += slash
 
-    print("Written testbench to " + write_path + tb_file_name + ". Happy HDLing.")
+    out_file_name = write_path
+
+    if outfile is None:
+        # find original file name, without the extension
+        # generate test bench file name
+        split_path = re.split("[.\\" + slash + "]", str(input_file))
+        filename = split_path[-2]
+        out_file_name += filename + "_tb.vhd"
+
+    try:
+
+        with open(out_file_name, "w") as out_file:
+            out_file.write(test_bench_str)
+
+        print("Written testbench to " + out_file_name + ". Happy HDLing.")
+
+    except OSError:
+        print("\nTestbench write failed( " + out_file_name
+              + " ) testbench template output will be printed for you to copy:\n\n\n")
+        print(test_bench_str)
 
 
 class VHDLModule:
-
     comment_delim_str = "--"
 
     tb_template = "----------------------------------------------------------------------------------\n" \
@@ -600,6 +643,8 @@ class VHDLModule:
             for p in self.ports:
                 print(p.port_decl_string())
 
+        print("\n\n")
+
     @staticmethod
     def remove_vhdl_comments(commented):
 
@@ -799,7 +844,6 @@ class VHDLControlInput:
 
     @staticmethod
     def reverse_polarity(orig):
-
         if orig == PolarityType.INVALID:
             return orig
 

@@ -146,7 +146,14 @@ class VHDLModule:
             ["[;]", ";"],
             ["[,]", ","],
 
-            # parlor trick incoming
+            # Parlor trick incoming: What is happening here is I cant go and run a replace looking for colons because
+            # it will catch all the colon-equals assignments, and it's not easy, and more importantly not portable,
+            # to try to distinguish between colon-equals and any other valid use of a colon in VHDL. Instead,
+            # I replace all colon-equals assignments with exclamation-mark equals, which is something not used at all
+            # in VHDL (not-equals is "/=" in this language). Then, i can space out colons, and the switch the
+            # exclamation-mark-equals pairs with spaced out colon-equals again. The side effect is that these will be
+            # double spaced out, but this doesnt matter since the split algorithm will delete any empty items after
+            # splitting.
             ["[:][=]", "!="],
             ["[=][>]", "=!"],
             ["[:]", ":"],
@@ -154,10 +161,12 @@ class VHDLModule:
             ["[=][!]", "=>"]
         ]
 
+        # space out assignments for parsing consistency
         for pair in things_to_space_out:
             # input_str = input_str.replace(pair[0], " " + pair[1] + " ")
             input_str = re.sub(pair[0], " " + pair[1] + " ", input_str)
 
+        # split input file into an array of items which will be individually traversed to parse the whole file.
         words = re.split("\\s+", input_str)
 
         entity_found = False
@@ -171,10 +180,10 @@ class VHDLModule:
         while i < len(words):
 
             # print(words[i])
-
+            # detecting the 'entity' statement
             if (not entity_found) and words[i].lower() == "entity":
                 self.name = words[i + 1]
-                print("Entity: " + self.name)
+                # print("Entity: " + self.name)
                 entity_found = True
                 i += 1
                 continue

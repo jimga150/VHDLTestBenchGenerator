@@ -16,3 +16,9 @@ Right now, its limitations are the following:
 * Doesn't use archiceture to guess reset polarity, only name
 * Makes no guesses at GPIO stimulus
 * Asserts and deasserts all resets at once
+
+TODO:
+* Detect multiple entites and group into different test bench files 
+* Check all architectures for relevant info
+* Attempt to use clock name for frequency guess (i.e. CLK_100MHz)
+* Use architecture to determine reset polarities

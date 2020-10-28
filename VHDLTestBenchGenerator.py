@@ -9,6 +9,8 @@ import argparse
 
 def parse_vhdl(args):
 
+    # TODO: Add option to manually mark clocks and resets
+
     parser = argparse.ArgumentParser(
         description="Generates a testbench template for a VHDL module, including clock and reset detection. File must "
                     "be a valid VHDL file with no parse errors. It must contain only one entity with at least one "

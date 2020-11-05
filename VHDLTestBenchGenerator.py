@@ -10,6 +10,7 @@ import argparse
 def parse_vhdl(args):
 
     # TODO: Add option to manually mark clocks and resets
+    # TODO: in the abscence of clocks, wait some time before deasserting reset in stim proc
 
     parser = argparse.ArgumentParser(
         description="Generates a testbench template for a VHDL module, including clock and reset detection. File must "
@@ -374,7 +375,7 @@ class VHDLModule:
             else:
                 continue
 
-            name = words[i + 2]
+            name = words[i + 2]  # TODO: encapsulate clock port adding
             if self.clk_port_invalid(name):
                 continue
 

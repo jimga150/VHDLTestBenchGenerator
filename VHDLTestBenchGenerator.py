@@ -418,9 +418,27 @@ class VHDLModule:
                 elif edge_val == "'0'":
                     self.clocks.append(Clock(clock_port, PolarityType.NEGATIVE))
 
+        # Strategy 3 for clock finding: any port containing 'clk', 'clock', 'clck'
+        to_remove = []
+        for p in self.ports:
+            if "clk" in p.name.lower() or "clock" in p.name.lower() or "clck" in p.name.lower():
+
+                if p.dir != PortDir.IN:
+                    continue
+
+                if p.is_bus():
+                    continue
+
+                if p.name.lower()[-1] == 'n':
+                    pol = PolarityType.NEGATIVE
+                else:
+                    pol = PolarityType.POSITIVE
+
+                to_remove.append(p)
+                self.clocks.append(Clock(p, pol))
+
         # Find reset ports
         # Literally just find any port containing "rst" or "reset" and if it ends in 'n', its negative
-        to_remove = []
         for p in self.ports:
             if "rst" in p.name.lower() or "reset" in p.name.lower():
 

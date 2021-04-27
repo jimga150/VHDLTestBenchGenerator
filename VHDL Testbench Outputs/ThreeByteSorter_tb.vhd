@@ -2,7 +2,7 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 10/18/2020 15:19:16
+-- Create Date: 04/27/2021 16:54:53
 -- Design Name: ThreeByteSorter_tb
 -- Module Name: ThreeByteSorter_tb - Behavioral
 -- Project Name: 
@@ -26,36 +26,40 @@ entity ThreeByteSorter_tb is
 end ThreeByteSorter_tb;
 
 architecture Behavioral of ThreeByteSorter_tb is
-    
-    --General inputs
-    signal data1 : STD_LOGIC_VECTOR(7 downto 0) := x"DE";
-    signal data2 : STD_LOGIC_VECTOR(7 downto 0) := x"DE";
-    signal data3 : STD_LOGIC_VECTOR(7 downto 0) := x"DE";
-    
-    --Outputs
-    signal high : STD_LOGIC_VECTOR(7 downto 0);
-    signal med : STD_LOGIC_VECTOR(7 downto 0);
-    signal low : STD_LOGIC_VECTOR(7 downto 0);
-    
+	
+	--General inputs
+	signal data1 : STD_LOGIC_VECTOR(7 downto 0) := x"DE";
+	signal data2 : STD_LOGIC_VECTOR(7 downto 0) := x"DE";
+	signal data3 : STD_LOGIC_VECTOR(7 downto 0) := x"DE";
+	
+	--Outputs
+	signal high : STD_LOGIC_VECTOR(7 downto 0);
+	signal med : STD_LOGIC_VECTOR(7 downto 0);
+	signal low : STD_LOGIC_VECTOR(7 downto 0);
+	
 begin
-    
-    UUT: entity work.ThreeByteSorter
-    port map(
-        data1 => data1,
-        data2 => data2,
-        data3 => data3,
-        high => high,
-        med => med,
-        low => low
-    );
-    
-    
-    stim_proc: process is begin
-        
-        --Insert stimuli here
-        
-        assert false report "End Simulation" severity failure;
-        
-    end process;
+	
+	UUT: entity work.ThreeByteSorter
+	port map(
+		data1 => data1,
+		data2 => data2,
+		data3 => data3,
+		high => high,
+		med => med,
+		low => low
+	);
+	
+	
+	stim_proc: process is begin
+		
+		--Insert stimuli here
+		
+		assert false report "End Simulation" severity failure;
+		
+		-- Not strictly necessary, but prevents process from looping 
+		-- if the above assert statement is removed
+		wait;
+		
+	end process;
 
 end Behavioral;

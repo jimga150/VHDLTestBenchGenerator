@@ -2,7 +2,7 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 10/18/2020 14:32:25
+-- Create Date: 04/27/2021 16:55:22
 -- Design Name: MLUART_RX_tb
 -- Module Name: MLUART_RX_tb - Behavioral
 -- Project Name: 
@@ -31,9 +31,9 @@ architecture Behavioral of MLUART_RX_tb is
     
     --Clocks
     signal CLK_100MHZ : std_logic := '0';
+    signal clk_en_16_x_baud : std_logic := '0';
     
     --General inputs
-    signal clk_en_16_x_baud : std_logic := '0';
     signal UART_RX : std_logic := '0';
     
     --Outputs
@@ -42,6 +42,7 @@ architecture Behavioral of MLUART_RX_tb is
     
     --Clock Periods
     constant CLK_100MHZ_period : time := 10 ns;
+    constant clk_en_16_x_baud_period : time := 10 ns;
     
 begin
     
@@ -56,6 +57,7 @@ begin
     
     --Clock Drivers
     CLK_100MHZ <= not CLK_100MHZ after CLK_100MHZ_period/2;
+    clk_en_16_x_baud <= not clk_en_16_x_baud after clk_en_16_x_baud_period/2;
     
     stim_proc: process is begin
         
@@ -64,6 +66,10 @@ begin
         --Insert stimuli here
         
         assert false report "End Simulation" severity failure;
+        
+        -- Not strictly necessary, but prevents process from looping 
+        -- if the above assert statement is removed
+        wait;
         
     end process;
 

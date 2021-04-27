@@ -626,21 +626,21 @@ class VHDLModule:
                 ";\n\t"
 
         deassert_resets += "\n\t\t"
-        test_bench_str = re.sub("{{RESETS_INACTIVE}}[\n][ ]{8}", deassert_resets, test_bench_str)
+        test_bench_str = re.sub("{{RESETS_INACTIVE}}[\n][\t]{2}", deassert_resets, test_bench_str)
 
         if len(self.resets) == 0:
             # replace only the first occurrence
-            test_bench_str = re.sub("[\n][ ]{8}{{STD_WAIT}}[\n][ ]{8}", "", test_bench_str, 1)
+            test_bench_str = re.sub("[\n][\t]{2}{{STD_WAIT}}[\n][\t]{2}", "", test_bench_str, 1)
 
         # First clock is used for master clock period waits by default
         if len(self.clocks) > 0:
             clock_per_wait = "wait for " + self.clocks[0].period_name() + ";\n\t\t"
             test_bench_str = re.sub("{{STD_WAIT}}", clock_per_wait, test_bench_str)
         else:
-            test_bench_str = re.sub("{{STD_WAIT}}\n[ ]{8}", "", test_bench_str)
 
         # replace all tabs with 4 spaces each
         test_bench_str = re.sub("[\t]", "    ", test_bench_str)
+            test_bench_str = re.sub("{{STD_WAIT}}\n[\t]{2}", "", test_bench_str)
 
         return test_bench_str
 

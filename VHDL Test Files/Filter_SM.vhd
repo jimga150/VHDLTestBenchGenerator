@@ -39,7 +39,7 @@ entity Filter_SM is
         test_int :integer:=5
     );
     port(
-        clk, rst : in std_logic;
+        clk, rst, clok, rastn: in std_logic;
         
         set_ba_write, set_ba_read : in std_logic;
         start : in std_logic;

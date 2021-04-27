@@ -8,9 +8,6 @@ import argparse
 
 
 def parse_vhdl(args):
-    # TODO: Add option to manually mark clocks and resets
-    # TODO: in the abscence of clocks, wait some time before deasserting reset in stim proc
-
     parser = argparse.ArgumentParser(
         description="Generates a testbench template for a VHDL module, including clock and reset detection. File must "
                     "be a valid VHDL file with no parse errors. It must contain only one entity with at least one "
@@ -19,6 +16,8 @@ def parse_vhdl(args):
     )
     parser.add_argument("-v", "--verbose", action="store_true", help="verbose mode")
     parser.add_argument("-s", "--spaces", help="use a number of spaces instead of tab characters")
+    parser.add_argument("--clkport", help="specify a string that indicates a clock port")
+    parser.add_argument("--rstport", help="specify a string that indicates a reset port")
     parser.add_argument("input_file", help="The VHDL module file to generate the testbench template for")
 
     group = parser.add_mutually_exclusive_group()
@@ -32,6 +31,8 @@ def parse_vhdl(args):
     outfile = parsed_args.out
     verbose_mode = parsed_args.verbose
     spaces_enabled = parsed_args.spaces
+    clk_substr = parsed_args.clkport
+    rst_substr = parsed_args.rstport
 
     if verbose_mode:
         print("args:")
@@ -60,7 +61,12 @@ def parse_vhdl(args):
     if verbose_mode:
         print(input_str)
 
-    module = VHDLModule(input_str)
+    module = VHDLModule()
+
+    module.clk_substr = clk_substr
+    module.rst_substr = rst_substr
+
+    module.use(input_str)
 
     if not module.valid:
         print("Invalid VHDL Entity.")
@@ -178,11 +184,17 @@ class VHDLModule:
     clocks = []
     resets = []
 
+    clk_substr = None
+    rst_substr = None
+
     name = ""
 
     valid = False
 
-    def __init__(self, input_str):
+    def __init__(self):
+        pass
+
+    def use(self, input_str):
         input_str = VHDLModule.remove_vhdl_comments(input_str)
 
         things_to_space_out = [
@@ -429,7 +441,9 @@ class VHDLModule:
         # Strategy 3 for clock finding: any port containing 'clk', 'clock', 'clck'
         to_remove = []
         for p in self.ports:
-            if "clk" in p.name.lower() or "clock" in p.name.lower() or "clck" in p.name.lower():
+            lcase_pname = p.name.lower()
+            if "clk" in lcase_pname or "clock" in lcase_pname or "clck" in lcase_pname or \
+                    (self.clk_substr is not None and self.clk_substr in lcase_pname):
 
                 if p.dir != PortDir.IN:
                     continue
@@ -448,7 +462,9 @@ class VHDLModule:
         # Find reset ports
         # Literally just find any port containing "rst" or "reset" and if it ends in 'n', its negative
         for p in self.ports:
-            if "rst" in p.name.lower() or "reset" in p.name.lower():
+            lcase_pname = p.name.lower()
+            if "rst" in lcase_pname or "reset" in lcase_pname or \
+                    (self.rst_substr is not None and self.rst_substr in lcase_pname):
 
                 if p.dir != PortDir.IN:
                     continue
@@ -629,7 +645,7 @@ class VHDLModule:
                 r.port.name + \
                 " <= " + \
                 VHDLModule.get_default_val_for(r.port.interface_type, r.polarity) + \
-                ";\n\t"
+                ";\n\t\t"
 
         deassert_resets += "\n\t\t"
         test_bench_str = re.sub("{{RESETS_INACTIVE}}[\n][\t]{2}", deassert_resets, test_bench_str)

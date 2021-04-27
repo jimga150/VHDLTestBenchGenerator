@@ -2,7 +2,7 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 04/27/2021 16:55:41
+-- Create Date: 04/27/2021 17:31:43
 -- Design Name: Filter_SM_tb
 -- Module Name: Filter_SM_tb - Behavioral
 -- Project Name: 
@@ -37,9 +37,11 @@ architecture Behavioral of Filter_SM_tb is
 	
 	--Clocks
 	signal clk : std_logic := '0';
+	signal clok : std_logic := '0';
 	
 	--Resets
 	signal rst : std_logic := '1';
+	signal rastn : std_logic := '0';
 	
 	--General inputs
 	signal set_ba_write : std_logic := '0';
@@ -62,6 +64,7 @@ architecture Behavioral of Filter_SM_tb is
 	
 	--Clock Periods
 	constant clk_period : time := 10 ns;
+	constant clok_period : time := 10 ns;
 	
 begin
 	
@@ -74,7 +77,9 @@ begin
 	)
 	port map(
 		clk => clk,
+		clok => clok,
 		rst => rst,
+		rastn => rastn,
 		set_ba_write => set_ba_write,
 		set_ba_read => set_ba_read,
 		start => start,
@@ -94,13 +99,15 @@ begin
 	
 	--Clock Drivers
 	clk <= not clk after clk_period/2;
+	clok <= not clok after clok_period/2;
 	
 	stim_proc: process is begin
 		
 		wait for clk_period;
 		
 		rst <= '0';
-	
+		rastn <= '1';
+		
 		wait for clk_period;
 		
 		--Insert stimuli here

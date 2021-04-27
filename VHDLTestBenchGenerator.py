@@ -8,7 +8,6 @@ import argparse
 
 
 def parse_vhdl(args):
-
     # TODO: Add option to manually mark clocks and resets
     # TODO: in the abscence of clocks, wait some time before deasserting reset in stim proc
 
@@ -137,28 +136,32 @@ class VHDLModule:
                   "end {{TESTBENCH_NAME}};\n" \
                   "\n" \
                   "architecture Behavioral of {{TESTBENCH_NAME}} is\n" \
-                  "    \n" \
-                  "    {{GENERIC_PARAM_DECL}}\n" \
-                  "    {{INPUT_SIGNAL_DECL}}\n" \
-                  "    {{IN_OUT_SIGNAL_DECL}}\n" \
-                  "    {{OUTPUT_SIGNAL_DECL}}\n" \
-                  "    {{CLOCK_PERIOD_DECL}}\n" \
+                  "\t\n" \
+                  "\t{{GENERIC_PARAM_DECL}}\n" \
+                  "\t{{INPUT_SIGNAL_DECL}}\n" \
+                  "\t{{IN_OUT_SIGNAL_DECL}}\n" \
+                  "\t{{OUTPUT_SIGNAL_DECL}}\n" \
+                  "\t{{CLOCK_PERIOD_DECL}}\n" \
                   "begin\n" \
-                  "    \n" \
-                  "    UUT: entity work.{{MODULE_NAME}}\n" \
-                  "    {{GENERIC_MAP}}{{PORT_MAP}}\n" \
-                  "    \n" \
-                  "    {{CLOCK_DRIVERS}}\n" \
-                  "    stim_proc: process is begin\n" \
-                  "        \n" \
-                  "        {{STD_WAIT}}\n" \
-                  "        {{RESETS_INACTIVE}}\n" \
-                  "        {{STD_WAIT}}\n" \
-                  "        --Insert stimuli here\n" \
-                  "        \n" \
-                  "        assert false report \"End Simulation\" severity failure;\n" \
-                  "        \n" \
-                  "    end process;\n" \
+                  "\t\n" \
+                  "\tUUT: entity work.{{MODULE_NAME}}\n" \
+                  "\t{{GENERIC_MAP}}{{PORT_MAP}}\n" \
+                  "\t\n" \
+                  "\t{{CLOCK_DRIVERS}}\n" \
+                  "\tstim_proc: process is begin\n" \
+                  "\t\t\n" \
+                  "\t\t{{STD_WAIT}}\n" \
+                  "\t\t{{RESETS_INACTIVE}}\n" \
+                  "\t\t{{STD_WAIT}}\n" \
+                  "\t\t--Insert stimuli here\n" \
+                  "\t\t\n" \
+                  "\t\tassert false report \"End Simulation\" severity failure;\n" \
+                  "\t\t\n" \
+                  "\t\t-- Not strictly necessary, but prevents process from looping \n" \
+                  "\t\t-- if the above assert statement is removed\n" \
+                  "\t\twait;\n" \
+                  "\t\t\n" \
+                  "\tend process;\n" \
                   "\n" \
                   "end Behavioral;\n"
 
@@ -174,7 +177,6 @@ class VHDLModule:
     valid = False
 
     def __init__(self, input_str):
-
         input_str = VHDLModule.remove_vhdl_comments(input_str)
 
         things_to_space_out = [
@@ -462,7 +464,6 @@ class VHDLModule:
         self.valid = True
 
     def build_test_bench_str(self):
-
         # most of this is plain, honest, replacement of template keywords.
 
         test_bench_str = self.tb_template
@@ -644,7 +645,6 @@ class VHDLModule:
         return test_bench_str
 
     def print_info(self):
-
         print("\nLibraries:")
         print(self.library_includes)
 
@@ -681,7 +681,6 @@ class VHDLModule:
 
     @staticmethod
     def remove_vhdl_comments(commented):
-
         # bust em open boys
         lines = re.split("[\r\n]", commented)
 
@@ -705,7 +704,6 @@ class VHDLModule:
         return ans
 
     def clk_port_invalid(self, name):
-
         name_match = False
         port_index = -1
 
@@ -728,7 +726,6 @@ class VHDLModule:
 
     @staticmethod
     def get_default_val_for(type_in, polarity):
-
         default_vals = [
 
             ["std_logic", "'0'", "'1'"],
@@ -797,7 +794,6 @@ class VHDLInterface:
 
 
 class Port(VHDLInterface):
-
     dir = PortDir.INVALID
 
     def __init__(self, name, dir_str, port_type, port_range, default_val=None):

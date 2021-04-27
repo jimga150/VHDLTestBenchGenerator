@@ -18,6 +18,7 @@ def parse_vhdl(args):
                     "relevant information. "
     )
     parser.add_argument("-v", "--verbose", action="store_true", help="verbose mode")
+    parser.add_argument("-s", "--spaces", help="use a number of spaces instead of tab characters")
     parser.add_argument("input_file", help="The VHDL module file to generate the testbench template for")
 
     group = parser.add_mutually_exclusive_group()
@@ -30,6 +31,7 @@ def parse_vhdl(args):
     outpath = parsed_args.outpath
     outfile = parsed_args.out
     verbose_mode = parsed_args.verbose
+    spaces_enabled = parsed_args.spaces
 
     if verbose_mode:
         print("args:")
@@ -69,6 +71,10 @@ def parse_vhdl(args):
         module.print_info()
 
     test_bench_str = module.build_test_bench_str()
+
+    if spaces_enabled:
+        # replace all tabs with 4 spaces each
+        test_bench_str = re.sub("[\t]", "    ", test_bench_str)
 
     if verbose_mode:
         print(test_bench_str)
@@ -637,9 +643,6 @@ class VHDLModule:
             clock_per_wait = "wait for " + self.clocks[0].period_name() + ";\n\t\t"
             test_bench_str = re.sub("{{STD_WAIT}}", clock_per_wait, test_bench_str)
         else:
-
-        # replace all tabs with 4 spaces each
-        test_bench_str = re.sub("[\t]", "    ", test_bench_str)
             test_bench_str = re.sub("{{STD_WAIT}}\n[\t]{2}", "", test_bench_str)
 
         return test_bench_str

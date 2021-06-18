@@ -101,7 +101,7 @@ def parse_vhdl(args):
         # find original file name, without the extension
         # generate test bench file name
         # print(input_file)
-        split_path = re.split("[.\\/]", input_file)
+        split_path = re.split("[./\\\]", input_file)
         # print(split_path)
         filename = split_path[-2]
         out_file_name += filename + "_tb.vhd"

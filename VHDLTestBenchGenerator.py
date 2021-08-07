@@ -88,6 +88,9 @@ def parse_vhdl(args):
     slash = os.path.sep
     write_path = str(Path.home()) + slash
 
+    #print(outpath)
+    #print(outfile)
+
     if not (outfile is None):
         write_path = outfile
     elif not (outpath is None):
@@ -96,6 +99,8 @@ def parse_vhdl(args):
             write_path += slash
 
     out_file_name = write_path
+    print("out_file_name: ")
+    print(out_file_name)
 
     if outfile is None:
         # find original file name, without the extension
@@ -105,6 +110,9 @@ def parse_vhdl(args):
         # print(split_path)
         filename = split_path[-2]
         out_file_name += filename + "_tb.vhd"
+
+    print("out_file_name: ")
+    print(out_file_name)
 
     try:
 

@@ -25,6 +25,7 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 entity MLUART_RX is
 port ( CLK_100MHZ         : in std_logic;
        clk_en_16_x_baud   : in std_logic;
+       test_inout1, test_in_out_2 : inout std_logic;
 		 read_data_complete : out std_logic;
 		 data_out           : out std_logic_vector(7 downto 0);
 		 UART_RX            : in std_logic);

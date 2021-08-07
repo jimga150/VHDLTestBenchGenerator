@@ -583,7 +583,7 @@ class VHDLModule:
             port_input_decl += "\n\t"
 
         if len(port_in_out_decl) > 0:
-            port_in_out_decl = self.comment_delim_str + "In-Outs\n\t" + generic_declarations
+            port_in_out_decl = self.comment_delim_str + "In-Outs\n\t" + port_in_out_decl
             port_in_out_decl += "\n\t"
 
         if len(port_output_decl) > 0:

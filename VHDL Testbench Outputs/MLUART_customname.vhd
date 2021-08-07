@@ -2,7 +2,7 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 04/27/2021 17:31:24
+-- Create Date: 08/07/2021 01:16:52
 -- Design Name: MLUART_RX_tb
 -- Module Name: MLUART_RX_tb - Behavioral
 -- Project Name: 
@@ -36,6 +36,10 @@ architecture Behavioral of MLUART_RX_tb is
     --General inputs
     signal UART_RX : std_logic := '0';
     
+    --In-Outs
+    signal test_inout1 : std_logic := '0';
+    signal test_in_out_2 : std_logic := '0';
+    
     --Outputs
     signal read_data_complete : std_logic;
     signal data_out : std_logic_vector(7 downto 0);
@@ -50,6 +54,8 @@ begin
     port map(
         CLK_100MHZ => CLK_100MHZ,
         clk_en_16_x_baud => clk_en_16_x_baud,
+        test_inout1 => test_inout1,
+        test_in_out_2 => test_in_out_2,
         read_data_complete => read_data_complete,
         data_out => data_out,
         UART_RX => UART_RX

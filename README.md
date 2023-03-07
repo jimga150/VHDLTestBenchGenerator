@@ -23,3 +23,4 @@ TODO:
 * Check all architectures for relevant info
 * Attempt to use clock name for frequency guess (i.e. CLK_100MHz)
 * Use architecture to determine reset polarities
+* parse "range" attributes in ports and geenrics
